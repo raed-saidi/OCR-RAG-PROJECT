@@ -3,42 +3,39 @@ import pickle
 import numpy as np
 import os
 
-# --- Charger les embeddings ---
+# Charger les embeddings
 with open("data/embeddings.pkl", "rb") as f:
     data = pickle.load(f)
 
 embeddings = data["embeddings"]
 file_paths = data["file_paths"]
 
-# --- Convertir en numpy array float32 ---
+# Convertir en numpy array float32 
 emb_array = np.array(embeddings).astype('float32')
 embedding_dim = emb_array.shape[1]
 
-# --- Créer l'index FAISS ---
-index = faiss.IndexFlatL2(embedding_dim)  # L2 = distance euclidienne
+# Créer le dossier FAISS
+os.makedirs("data/faiss", exist_ok=True)
+
+# Créer l'index FAISS
+index = faiss.IndexFlatL2(embedding_dim)
 index.add(emb_array)
 print(f"FAISS index contient {index.ntotal} vecteurs")
 
-# --- Sauvegarder l'index et les chemins ---
-os.makedirs("data", exist_ok=True)
-faiss.write_index(index, "data/faiss_index.idx")
-
-with open("data/file_paths.pkl", "wb") as f:
+# Sauvegarder l'index et le mapping
+faiss.write_index(index, "data/faiss/index.faiss")
+with open("data/faiss/file_mapping.pkl", "wb") as f:
     pickle.dump(file_paths, f)
 
-print("Index FAISS et chemins sauvegardés ✅")
+print("Index FAISS et mapping sauvegardés ✅")
 
-# --- Fonction de recherche top-k ---
+# Fonction de recherche top-k 
 def search(query_emb, k=5):
-    """
-    query_emb : embedding numpy float32 (1, dim)
-    k : nombre de documents à récupérer
-    """
     distances, indices = index.search(query_emb, k)
     results = [(file_paths[i], distances[0][idx]) for idx, i in enumerate(indices[0])]
     return results
 
-# --- Test rapide si on lance directement ---
+# Test rapide 
 if __name__ == "__main__":
     from sentence_transformers import SentenceTransformer
     
