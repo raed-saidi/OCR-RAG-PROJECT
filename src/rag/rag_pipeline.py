@@ -1,4 +1,4 @@
-from Retriever import Retriever
+from retriever import Retriever
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 
