@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+venv/
+
+# Data lourde ou privée
+data/raw/*
+data/text/*
+
+# VSCode
+.vscode/
+
+# Environment files
+.env
