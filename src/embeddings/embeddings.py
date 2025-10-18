@@ -1,4 +1,5 @@
 import os
+import pickle
 from sentence_transformers import SentenceTransformer
 
 # Charger le modèle
@@ -24,5 +25,11 @@ def iterating_texts(text_folder):
 
 # Lancer l’itération
 iterating_texts(text_folder)
+os.makedirs("data", exist_ok=True)
+
+with open("data/embeddings.pkl", "wb") as f:
+    pickle.dump({"embeddings": embeddings, "file_paths": file_paths}, f)
+
+print("embeddings.pkl créé ✅")
 print(f"Embeddings générés pour {len(embeddings)} fichiers")
 print(embeddings)
