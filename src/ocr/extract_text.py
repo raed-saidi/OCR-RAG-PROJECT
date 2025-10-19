@@ -7,11 +7,8 @@ from pdf2image import convert_from_path
 
 # Minimal text cleaning
 def minimal_cleaning(text): 
-    # Supprimer les caractères non imprimables
     text = re.sub(r'[^\x20-\x7E\n]', '', text)
-    # Remplacer plusieurs espaces par un seul
     text = re.sub(r' +', ' ', text)
-    # Supprimer les lignes vides
     lines = text.splitlines()
     lines = [line.strip() for line in lines if line.strip()]
     return '\n'.join(lines)
@@ -22,8 +19,8 @@ def is_scanned_pdf(pdf_path):
         for page in pdf.pages:
             text = page.extract_text()
             if text and text.strip():
-                return False  # PDF texte natif
-    return True  # PDF scanné
+                return False 
+    return True  
 
 # Extract text from scanned PDF
 def extract_text_from_scanned_pdf(pdf_path):
@@ -61,26 +58,28 @@ def name_extractor(file_path):
 # Save cleaned text to file
 def storing_text(text, file_path):
     name = name_extractor(file_path)
-    output_path = os.path.join("data", "text", name + ".txt")
+    # Obtenir le chemin absolu vers la racine du projet
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # src/ocr/
+    src_dir = os.path.dirname(script_dir)  # src/
+    project_root = os.path.dirname(src_dir)  # racine du projet
+    output_path = os.path.join(project_root, "data", "text", name + ".txt")
+    
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(text)
-    print(f"[SAVED] {output_path}")
 
 # Main iteration over file list
 def iterating(files_list):
-    for file in files_list:
-        if file["type"] == "application":  # PDF
-            text = extract_text_pdf(file)
-        else:  # Image
-            text = extract_text_image(file)
-        storing_text(text, file["path"])
+    if not files_list:
+        return
+    
+    for i, file in enumerate(files_list, 1):
+        try:
+            if file["type"] == "application":  # PDF
+                text = extract_text_pdf(file)
+            else:  # Image
+                text = extract_text_image(file)
+            storing_text(text, file["path"])
+        except Exception as e:
+            print(f"[ERREUR] Échec pour {file['path']}: {str(e)}")
 
-# Exemple d'utilisation
-if __name__ == "__main__":
-   
-    # Ajouter le dossier courant au Python path pour trouver list_files.py
-    sys.path.append(os.path.dirname(__file__))
-
-    from list_file import files  # fichiers listés
-    iterating(files)

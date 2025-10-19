@@ -6,7 +6,7 @@ files = []
 def get_file_type(filepath):
     mime_type, _ = mimetypes.guess_type(filepath)
     if mime_type:
-        return mime_type.split('/')[0]  # 'image', 'application', etc.
+        return mime_type.split('/')[0]  
     return "unknown"
 
 def list_files(folder):
@@ -21,9 +21,15 @@ def list_files(folder):
         elif os.path.isdir(full_path):
             list_files(full_path)  # recursion pour les sous-dossiers
 
-# Exemple d’utilisation
-folder = r"data\raw"
-list_files(folder)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(script_dir))
+folder = os.path.join(project_root, "data", "raw")
 
-for f in files:
-    print(f)
+# Vérifier si le dossier existe
+if os.path.exists(folder):
+    list_files(folder)
+    print(f"[INFO] {len(files)} fichier(s) trouvé(s) dans {folder}\n")
+    for f in files:
+        print(f)
+else:
+    print(f"[ERREUR] Le dossier {folder} n'existe pas !")
