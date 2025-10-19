@@ -15,11 +15,9 @@ class Retriever:
         self.mapping_path = os.path.join(project_root, mapping_path)
         
         if not os.path.exists(self.index_path):
-            print(f"[ERROR] Index FAISS introuvable : {self.index_path}", file=sys.stderr)
-            raise FileNotFoundError(f"Index FAISS introuvable : {self.index_path}")
+            raise FileNotFoundError(f"FAISS index not found: {self.index_path}")
         if not os.path.exists(self.mapping_path):
-            print(f"[ERROR] Mapping introuvable : {self.mapping_path}", file=sys.stderr)
-            raise FileNotFoundError(f"Mapping introuvable : {self.mapping_path}")
+            raise FileNotFoundError(f"File mapping not found: {self.mapping_path}")
         
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self.index = faiss.read_index(self.index_path)
@@ -27,7 +25,7 @@ class Retriever:
         with open(self.mapping_path, "rb") as f:
             self.file_paths = pickle.load(f)
 
-        print(f"[DEBUG] Loaded {len(self.file_paths)} files from mapping", file=sys.stderr)
+        print(f"[DEBUG] Loaded {len(self.file_paths)} files", file=sys.stderr)
 
     def search(self, query, k=3):
         k = min(k, len(self.file_paths))

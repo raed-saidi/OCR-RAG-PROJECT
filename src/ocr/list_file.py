@@ -1,35 +1,33 @@
 import os
 import mimetypes
 
-files = []
-
 def get_file_type(filepath):
     mime_type, _ = mimetypes.guess_type(filepath)
-    if mime_type:
-        return mime_type.split('/')[0]  
-    return "unknown"
+    return mime_type.split('/')[0] if mime_type else "unknown"
 
-def list_files(folder):
-    contenu = os.listdir(folder)
-    for c in contenu:
-        full_path = os.path.join(folder, c)
+def list_files_recursive(folder, files_list):
+    for item in os.listdir(folder):
+        full_path = os.path.join(folder, item)
         if os.path.isfile(full_path):
-            files.append({
+            files_list.append({
                 "path": full_path,
                 "type": get_file_type(full_path)
             })
         elif os.path.isdir(full_path):
-            list_files(full_path)  # recursion pour les sous-dossiers
+            list_files_recursive(full_path, files_list)
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(script_dir))
-folder = os.path.join(project_root, "data", "raw")
-
-# Vérifier si le dossier existe
-if os.path.exists(folder):
-    list_files(folder)
-    print(f"[INFO] {len(files)} fichier(s) trouvé(s) dans {folder}\n")
+if __name__ == "__main__":
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(script_dir))
+    raw_folder = os.path.join(project_root, "data", "raw")
+    
+    if not os.path.exists(raw_folder):
+        print(f"[ERROR] Folder not found: {raw_folder}")
+        exit(1)
+    
+    files = []
+    list_files_recursive(raw_folder, files)
+    
+    print(f"[INFO] Found {len(files)} file(s) in {raw_folder}\n")
     for f in files:
-        print(f)
-else:
-    print(f"[ERREUR] Le dossier {folder} n'existe pas !")
+        print(f"  {f['type']:10} {f['path']}")

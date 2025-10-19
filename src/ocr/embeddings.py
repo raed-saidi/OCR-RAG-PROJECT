@@ -1,59 +1,54 @@
 import os
 import pickle
+import sys
 from sentence_transformers import SentenceTransformer
 
-# Obtenir les chemins absolus
+# Setup paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.dirname(script_dir)
-project_root = os.path.dirname(src_dir)
-
+project_root = os.path.dirname(os.path.dirname(script_dir))
 text_folder = os.path.join(project_root, "data", "text")
 output_path = os.path.join(project_root, "data", "embeddings.pkl")
 
-# Vérifier que le dossier existe
 if not os.path.exists(text_folder):
-    exit(1)
+    print(f"[ERROR] Text folder not found: {text_folder}")
+    sys.exit(1)
 
-# Charger le modèle
+# Load model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 embeddings = []
 file_paths = []
 
-
-def embedding(file_name):
-    full_path = os.path.join(text_folder, file_name)
+def process_file(filename):
+    full_path = os.path.join(text_folder, filename)
     try:
         with open(full_path, 'r', encoding='utf-8') as f:
             text = f.read()
         
-        if not text.strip():
-            return
-        
-        emb = model.encode(text)
-        embeddings.append(emb)
-        file_paths.append(full_path)
+        if text.strip():
+            emb = model.encode(text)
+            embeddings.append(emb)
+            file_paths.append(full_path)
     except Exception as e:
-        print(f"[ERREUR] {file_name}: {e}")
+        print(f"[ERROR] {filename}: {e}")
 
+# Process all text files
+files = [f for f in os.listdir(text_folder) if f.endswith('.txt')]
 
-def iterating_texts(text_folder):
-    files = [f for f in os.listdir(text_folder) if f.endswith('.txt')]
-    
-    if not files:
-        exit(1)
-    
-    print(f"[INFO] Traitement de {len(files)} fichier(s)...\n")
-    for file in files:
-        embedding(file)
+if not files:
+    print("[ERROR] No text files found")
+    sys.exit(1)
 
+print(f"[INFO] Processing {len(files)} file(s)...\n")
 
-# Lancer l'itération
-iterating_texts(text_folder)
+for file in files:
+    process_file(file)
 
-# Sauvegarder les embeddings
+# Save embeddings
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 with open(output_path, "wb") as f:
     pickle.dump({"embeddings": embeddings, "file_paths": file_paths}, f)
 
+print(f"[SUCCESS] Generated {len(embeddings)} embeddings")
+print(f"[SUCCESS] Saved to: {output_path}\n")

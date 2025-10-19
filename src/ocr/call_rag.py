@@ -1,28 +1,19 @@
-# src/ocr/call_rag.py
 import sys
 import json
 import os
-
-# Load environment variables from .env file
 from dotenv import load_dotenv
 
-# Get project root and load .env
+# Load environment variables
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(script_dir))
-env_path = os.path.join(project_root, '.env')
-load_dotenv(env_path)
+load_dotenv(os.path.join(project_root, '.env'))
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
+sys.path.insert(0, script_dir)
 from rag_pipeline import RAGPipeline
 
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({
-            "success": False,
-            "error": "Usage: python call_rag.py <question> [k]"
-        }))
+        print(json.dumps({"success": False, "error": "Usage: python call_rag.py <question> [k]"}))
         sys.exit(1)
 
     query = sys.argv[1]
@@ -31,38 +22,27 @@ def main():
     print(f"[INFO] Question: {query}", file=sys.stderr)
     print(f"[INFO] Retrieving top {k} documents", file=sys.stderr)
 
+    if not os.environ.get("GROQ_API_KEY"):
+        print(json.dumps({
+            "success": False,
+            "error": "GROQ_API_KEY not set. Get your key at https://console.groq.com"
+        }))
+        sys.exit(1)
+
     try:
-        # Check for Groq API key
-        if not os.environ.get("GROQ_API_KEY"):
-            print(json.dumps({
-                "success": False,
-                "error": "GROQ_API_KEY environment variable not set. "
-                        "Get your API key at https://console.groq.com"
-            }))
-            sys.exit(1)
+        pipeline = RAGPipeline()
+        result = pipeline.generate_answer(query, k=k)
 
-        # Initialize RAG pipeline
-        pipeline_rag = RAGPipeline()
-        
-        # Generate answer
-        result = pipeline_rag.generate_answer(query, k=k)
-
-        if not result.get("success", False):
+        if not result.get("success"):
             raise Exception(result.get("error", "Unknown error"))
 
-        # Output JSON to stdout (API will parse this)
         print(json.dumps(result, ensure_ascii=False, indent=2))
 
     except FileNotFoundError as e:
         error_msg = str(e)
         if "index.faiss" in error_msg or "file_mapping" in error_msg:
-            error_msg = ("FAISS index not found. Please run embeddings.py "
-                        "and faiss_index.py first to build the index.")
-        print(json.dumps({
-            "success": False,
-            "error": error_msg,
-            "type": "FileNotFoundError"
-        }))
+            error_msg = "FAISS index not found. Run: embeddings.py → faiss_index.py"
+        print(json.dumps({"success": False, "error": error_msg, "type": "FileNotFoundError"}))
         sys.exit(1)
 
     except Exception as e:
