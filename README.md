@@ -474,14 +474,7 @@ export GROQ_API_KEY=your_key_here
 
 ---
 
-## 💡 Support
-
-- 📖 [Documentation](https://github.com/yourusername/ocr-rag-assistant/wiki)
-- 🐛 [Report Bug](https://github.com/yourusername/ocr-rag-assistant/issues)
-- 💬 [Discussions](https://github.com/yourusername/ocr-rag-assistant/discussions)
-
----
-
 <p align="center">
   Made with ❤️ 
 </p>
+
